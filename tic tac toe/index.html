@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden; /* Prevents scrolling during celebration */
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    #names {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    #names input {
+      font-size: 16px;
+      padding: 5px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 5px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      border: 1px solid #6df27d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      cursor: pointer;
+    }
+
+    #restart {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* Winner popup styles */
+    #winnerPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #ffffff;
+      padding: 20px;
+      border: 2px solid #6df27d;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      text-align: center;
+      animation: celebrationPopup 2s forwards ease-in-out;
+    }
+
+    @keyframes celebrationPopup {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Celebration animation */
+    @keyframes celebrationBoom {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-50vh) scale(0.5);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .celebration-boom {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #ff0000; /* Color of the boom */
+      border-radius: 50%;
+      animation: celebrationBoom 1s infinite;
+    }
+
+    @keyframes celebrationCracker {
+      0% {
+        transform: translateY(0) rotate(0);
+      }
+      50% {
+        transform: translateY(-50vh) rotate(180deg);
+      }
+      100% {
+        transform: translateY(0) rotate(360deg);
+      }
+    }
+
+    .celebration-cracker {
+      position: absolute;
+      width: 20px;
+      height: 100px;
+      background-color: #ffcc00; /* Color of the cracker */
+      border-radius: 5px;
+      animation: celebrationCracker 1s infinite;
+    }
+  </style>
+  <title>Tic Tac Toe</title>
+</head>
+<body>
+
+<h1>Tic Tac Toe Game</h1>
+<h2>For Valuepitch!</h2>
+
+<div id="names">
+  <label for="playerX">Player X:</label>
+  <input type="text" id="playerX" placeholder="Enter name for X">
+
+  <label for="playerO">Player O:</label>
+  <input type="text" id="playerO" placeholder="Enter name for O">
+</div>
+
+<div id="board"></div>
+<button id="restart" onclick="restartGame()">Restart Game</button>
+
+<!-- Winner Popup -->
+<div id="winnerPopup">
+  <h2 id="winnerText"></h2>
+  <button onclick="closeWinnerPopup()">Close</button>
+</div>
+
+<script>
+  const board = document.getElementById('board');
+  const restartButton = document.getElementById('restart');
+  const winnerPopup = document.getElementById('winnerPopup');
+  const winnerText = document.getElementById('winnerText');
+  const playerXInput = document.getElementById('playerX');
+  const playerOInput = document.getElementById('playerO');
+
+  let currentPlayer = 'X';
+  let gameBoard = ['', '', '', '', '', '', '', '', ''];
+  let gameActive = true;
+
+  function handleCellClick(index) {
+    if (!gameBoard[index] && gameActive) {
+      gameBoard[index] = currentPlayer;
+      renderBoard();
+      checkWinner();
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    }
+  }
+
+  function restartGame() {
+    gameBoard = ['', '', '', '', '', '', '', '', ''];
+    currentPlayer = 'X';
+    gameActive = true;
+    renderBoard();
+  }
+
+  function renderBoard() {
+    board.innerHTML = '';
+    gameBoard.forEach((value, index) => {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.textContent = value; // Display 'X' or 'O' in the cell
+      cell.addEventListener('click', () => handleCellClick(index));
+      board.appendChild(cell);
+    });
+  }
+
+  function checkWinner() {
+    const winningCombinations = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+      [0, 4, 8], [2, 4, 6]             // Diagonals
+    ];
+
+    for (const combo of winningCombinations) {
+      const [a, b, c] = combo;
+      if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+        const winnerName = getPlayerName(currentPlayer);
+        winnerText.textContent = `${winnerName} wins! 🎉`;
+        showWinnerPopup();
+        showCelebration();
+        gameActive = false;
+        break;
+      }
+    }
+
+    if (!gameBoard.includes('') && gameActive) {
+      winnerText.textContent = 'It\'s a tie!';
+      showWinnerPopup();
+      gameActive = false;
+    }
+  }
+
+  function getPlayerName(player) {
+    return player === 'X' ? playerXInput.value || 'Player X' : playerOInput.value || 'Player O';
+  }
+
+  function showWinnerPopup() {
+    winnerPopup.style.display = 'block';
+  }
+
+  function closeWinnerPopup() {
+    winnerPopup.style.display = 'none';
+  }
+
+  function showCelebration() {
+    const celebrationContainer = document.createElement('div');
+    celebrationContainer.classList.add('celebration-boom');
+
+    for (let i = 0; i < 5; i++) {
+      const boom = document.createElement('div');
+      boom.style.left = Math.random() * 100 + 'vw';
+      boom.style.top = Math.random() * 100 + 'vh';
+      celebrationContainer.appendChild(boom);
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const cracker = document.createElement('div');
+      cracker.style.left = Math.random() * 100 + 'vw';
+      cracker.style.top = Math.random() * 100 + 'vh';
+      celebrationContainer.appendChild(cracker);
+    }
+
+    document.body.appendChild(celebrationContainer);
+
+    setTimeout(() => {
+      celebrationContainer.remove();
+    }, 2000); // Remove celebration after 2 seconds
+  }
+
+  renderBoard();
+</script>
+
+</body>
+</html>
